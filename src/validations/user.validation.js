@@ -1,10 +1,26 @@
-import z from "zod";
+import { z } from "zod";
 
-export const registerSchema = z.object({
+export const userRegisterSchema = z.object({
   body: z.object({
-    username: z.string().min(3).max(50),
-    email: z.string().email("Invalid email format"),
-    password: z.string().min(6, "Password must be a last 6 chars"),
-    role: z.enum(["user", "vendor"]).optional(),
+    username: z
+      .string({ required_error: "Username is required" })
+      .min(3, "Username must be at least 3 characters")
+      .max(50, "Username cannot exceed 50 characters")
+      .trim(),
+
+    email: z
+      .string({ required_error: "Email is required" })
+      .email("Invalid email format")
+      .lowercase()
+      .trim(),
+
+    password: z
+      .string({ required_error: "Password is required" })
+      .min(6, "Password must be at least 6 characters")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
+
+    role: z.enum(["user", "vendor"]).default("user"),
   }),
 });
