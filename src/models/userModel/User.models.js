@@ -12,6 +12,11 @@ const userSchema = new Schema(
       trim: true,
       maxlength: [50, "Name can not be more then 50 Characters"],
     },
+    fullName: {
+      type: String,
+      required: [true, "Name is Required"],
+      maxlength: [50, "Name can not be more then 50 Characters"],
+    },
     email: {
       type: String,
       required: [true, "Pleace Provide Vaid Email"],

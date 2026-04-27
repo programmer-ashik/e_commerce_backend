@@ -7,7 +7,10 @@ export const userRegisterSchema = z.object({
       .min(3, "Username must be at least 3 characters")
       .max(50, "Username cannot exceed 50 characters")
       .trim(),
-
+    fullName: z
+      .string({ required_error: "Fullname is Required" })
+      .min(3, "Username must be at least 3 characters")
+      .max(50, "Username cannot exceed 50 characters"),
     email: z
       .string({ required_error: "Email is required" })
       .email("Invalid email format")
