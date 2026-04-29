@@ -1,3 +1,4 @@
+import redisClient from "../config/redis";
 import { User } from "../models/userModel/User.models";
 import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
@@ -14,9 +15,16 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
       token,
       process.env.ACCESS_TOKEN_SECRET
     );
-    const user = await User.findById(decodeToken._id);
+    // check token have in redis
+    const storedToken = await redisClient.get(
+      `refresh_token:${decodeToken._id}`
+    );
+    if (!storedToken) {
+      throw new ApiError(401, "Session expired, please login again");
+    }
+    const user = await User.findById(decodeToken._id).select("-password");
     if (!user) {
-      throw new ApiError(404, "user not found");
+      throw new ApiError(401, "Invalid AccessToken");
     }
     req.user = user;
     next();
