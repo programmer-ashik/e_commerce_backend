@@ -65,6 +65,11 @@ const categoryScheme = new Schema(
       type: Boolean,
       default: false,
     },
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
     order: {
       type: Number,
       default: 0,
@@ -107,6 +112,11 @@ categoryScheme.pre("save", async function (next) {
       this.level = 0;
     }
   }
+  next();
+});
+categorySchema.pre(/^find/, function (next) {
+  // { isDeleted: false }
+  this.find({ isDeleted: { $ne: true } });
   next();
 });
 
