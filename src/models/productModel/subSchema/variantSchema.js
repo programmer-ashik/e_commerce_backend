@@ -1,4 +1,4 @@
-export const variantSchema = new Schema(
+const variantSchema = new Schema(
   {
     sku: {
       type: String,
@@ -28,3 +28,4 @@ export const variantSchema = new Schema(
   },
   { _id: true }
 );
+export { variantSchema };

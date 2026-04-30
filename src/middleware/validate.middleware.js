@@ -15,7 +15,7 @@ const validate = (schema) => (req, res, next) => {
     const errorMessage = error.errors
       .map((details) => `${details.path.join(".")} is ${details.message}`)
       .join(", ");
-    next(new ApiError(400, errorMessage, error.errors));
+    next(new ApiError(400, errorMessage || "Validation Error", error.errors));
   }
 };
 export default validate;

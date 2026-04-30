@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import slugify from "slugify";
 import productSchema from "./product/product.schema.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 // ========== VIRTUALS ==========
 productSchema.virtual("discountPercentage").get(function () {
@@ -33,8 +34,30 @@ productSchema.pre("save", async function (next) {
 });
 
 // ========== METHODS ==========
+// -----check if products is in stock------
 productSchema.methods.isInStock = function (quantity = 1) {
   return this.stock >= quantity;
 };
+// ------reduce stock-----
+productSchema.methods.reduceStock = async function (quantity) {
+  if (!this.isInStock(quantity)) {
+    throw new ApiError(403, "Insufficient stock");
+  }
+  this.stock -= quantity;
+  this.totalSold += quantity;
+  await this.save();
+  return true;
+};
+// -------increase stock (for cancellations/returns)---------
+productSchema.methods.reduceStock = async function (quantity) {
+  this.stock += quantity;
+  await this.save();
+  return true;
+};
 
+productSchema.methods.incrementViews = async function () {
+  this.totalViews += 1;
+  await this.save();
+  return true;
+};
 export const Product = mongoose.model("Product", productSchema);

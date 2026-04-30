@@ -1,9 +1,9 @@
-import { Route } from "express";
+import { Router } from "express";
 import { verifyJWT } from "../middleware/auth.middleware";
 import { upload } from "../middleware/upload.middleware";
 import { createCategory } from "../controller/category.controller";
 
-const router = Route();
+const router = Router();
 // src/routes/category.routes.js
 router.route("/create").post(
   verifyJWT,
@@ -13,3 +13,4 @@ router.route("/create").post(
   ]),
   createCategory
 );
+export default router;
