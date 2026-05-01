@@ -15,5 +15,7 @@ router.route("/create").post(
   validate(createProductValidation),
   createProduct
 );
+// src/routes/product.routes.js
+router.route("/details/:productId").get(getProductDetails);
 
 export default router;

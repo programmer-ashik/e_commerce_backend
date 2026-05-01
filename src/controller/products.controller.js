@@ -1,3 +1,4 @@
+import { isValidObjectId } from "mongoose";
 import {
   deleteCloudinary,
   uploadOnCloudinary,
@@ -29,7 +30,7 @@ const createProduct = asyncHandler(async (req, res) => {
   // for nested object sefly parseing
   const parseJsonData = (data) => {
     try {
-      return typeof data === "string" ? json.parse(data) : data;
+      return typeof data === "string" ? JSON.parse(data) : data;
     } catch (error) {
       return undefined;
     }
@@ -111,18 +112,21 @@ const updateProduct = asyncHandler(async (req, res) => {
   // ------parse string to object -----
   const parseJsonData = (data) => {
     try {
-      return typeof data === "string" ? json.parse(data) : data;
+      return typeof data === "string" ? JSON.parse(data) : data;
     } catch (error) {
       return undefined;
     }
   };
-  const updateData = {
+  const fieldsToUpdate = {
     ...req.body,
     shipping: parseJsonData(req.body.shipping),
     seo: parseJsonData(req.body.seo),
     specifications: parseJsonData(req.body.specifications),
     variants: parseJsonData(req.body.variants),
   };
+  // ==== object.assign use to impose all data in products data====
+  Object.assign(product, fieldsToUpdate);
+  // image modeling
   if (req.files.mainImage || req.files.gallery?.length > 0) {
     if (req.files?.mainImage?.[0]) {
       const oldMainImage = product.images.find((img) => img.isMain === true);
@@ -138,17 +142,14 @@ const updateProduct = asyncHandler(async (req, res) => {
       keepOldGallery: req.body.keepOldGallery === "true",
     });
   }
-  const updatedProduct = await productRepository.updateById(
-    productId,
-    updateData
-  );
+  const updatedProduct = await product.save();
   return res
     .status(200)
     .json(
       new ApiResponse(
         200,
         updatedProduct,
-        "Product details updated. Images are being processed."
+        "Product updated. Slug and Price recalculated. Images are being processed."
       )
     );
 });
@@ -183,4 +184,20 @@ const getVendorProducts = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, result, "Vendor products fetched successfully"));
 });
+const getProductDetails = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  if (!isValidObjectId(productId)) {
+    throw new ApiError(400, "Invalid Product ID");
+  }
+  const data = await productRepository.getProductDetails(productId);
+  if (!data || !data.product) {
+    throw new ApiError(404, "Product not found");
+  }
+  await data.product.incrementViews();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, data, "Product details fetched successfully"));
+});
+
 export { createProduct, updateProduct };

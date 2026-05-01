@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import slugify from "slugify";
 import productSchema from "./product/product.schema.js";
 import { ApiError } from "../../utils/ApiError.js";
-import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2"
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 // ========== VIRTUALS ==========
 productSchema.virtual("discountPercentage").get(function () {
@@ -50,7 +50,7 @@ productSchema.methods.reduceStock = async function (quantity) {
   return true;
 };
 // -------increase stock (for cancellations/returns)---------
-productSchema.methods.reduceStock = async function (quantity) {
+productSchema.methods.increaseStock = async function (quantity) {
   this.stock += quantity;
   await this.save();
   return true;

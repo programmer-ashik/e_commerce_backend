@@ -57,25 +57,15 @@ class ProductRepository extends BaseRepository {
     pipeline.push({
       $match: { status: statusFilter, isActive: true },
     });
-    pipeline.push({
-      $addFields: {
-        calculatedFinalPrice: {
-          $subtract: [
-            "$price",
-            { $multiply: ["$price", { $divide: ["$discount", 100] }] },
-          ],
-        },
-      },
-    });
 
     if (minPrice || maxPrice) {
       const priceMatch = {};
       if (minPrice) priceMatch.$gte = Number(minPrice);
       if (maxPrice) priceMatch.$lte = Number(maxPrice);
-      pipeline.push({ $match: { calculatedFinalPrice: priceMatch } });
+      pipeline.push({ $match: { finalPrice: priceMatch } });
     }
     // -----------sorting logic-------------
-    const sortField = sortBy === "price" ? "calculatedFinalPrice" : sortBy;
+    const sortField = sortBy === "price" ? "finalPrice" : sortBy;
     pipeline.push({ $sort: { [sortField]: Number(sortOrder) } });
     pipeline.push({
       $lookup: {
@@ -108,6 +98,24 @@ class ProductRepository extends BaseRepository {
       },
       { new: true }
     );
+  }
+  // getproductsdetails
+  async getProductDetails(productId) {
+    const product = await this.model.findOne({
+      _id: productId,
+      isActive: true,
+    });
+    if (!product) return null;
+    const relatedProducts = await this.model
+      .find({
+        category: product.category._id,
+        _id: { $ne: productId },
+        status: "active",
+        isActive: true,
+      })
+      .limit(5)
+      .select("name price discount images calculatedFinalPrice");
+    return { product, relatedProducts };
   }
 }
 
