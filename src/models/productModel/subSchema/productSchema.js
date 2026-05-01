@@ -122,7 +122,14 @@ const productSchema = new Schema(
     status: {
       type: String,
       enum: {
-        values: ["draft", "pending", "active", "inactive", "deleted"],
+        values: [
+          "draft",
+          "pending",
+          "active",
+          "inactive",
+          "deleted",
+          "archived",
+        ],
         message: "{VALUE} is not a valid status",
       },
       default: "draft",

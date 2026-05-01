@@ -38,23 +38,25 @@ class ProductRepository extends BaseRepository {
     const pipeline = [];
     if (searchTerm) {
       pipeline.push({
-        $match: { $text: { search: searchTerm } },
+        $match: { $text: { $search: searchTerm } },
       });
     }
-    // active and not deleted
-    pipeline.push({
-      $match: {
-        "status.values": "active",
-        isActive: true,
-      },
-    });
-
     if (category) {
       pipeline.push({
         $match: { category: new mongoose.Types.ObjectId(category) },
       });
     }
-
+    if (filters.vendor) {
+      pipeline.push({
+        $match: { vendor: new mongoose.Types.ObjectId(filters.vendor) },
+      });
+    }
+    const statusFilter = filters.vendor
+      ? filters.status || { $ne: "deleted" }
+      : "active";
+    pipeline.push({
+      $match: { status: statusFilter, isActive: true },
+    });
     pipeline.push({
       $addFields: {
         calculatedFinalPrice: {
@@ -74,10 +76,7 @@ class ProductRepository extends BaseRepository {
     }
     // -----------sorting logic-------------
     const sortField = sortBy === "price" ? "calculatedFinalPrice" : sortBy;
-    pipeline.push({ $sort: { [sortField]: Number(limit) } });
-    // ---------------pagenations---------
-    pipeline.push({ $skip: (Number(page) - 1) * Number(limit) });
-    pipeline.push({ $limit: Number(limit) });
+    pipeline.push({ $sort: { [sortField]: Number(sortOrder) } });
     pipeline.push({
       $lookup: {
         from: "categories",
@@ -86,7 +85,29 @@ class ProductRepository extends BaseRepository {
         as: "categoryDetails",
       },
     });
-    return this.model.aggregate(pipeline);
+    const productAggregate = this.model.aggregate(pipeline);
+    const options = {
+      page: Number(page),
+      limit: Number(limit),
+    };
+    return this.model.aggregatePaginate(productAggregate, options);
+  }
+  async updateProduct(productId, updateData) {
+    return await this.model.findByIdAndUpdate(
+      productId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+  }
+  async softDelete(productId) {
+    return await this.model.findByIdAndUpdate(
+      productId,
+      {
+        isActive: false,
+        status: "archived",
+      },
+      { new: true }
+    );
   }
 }
 

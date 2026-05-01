@@ -35,6 +35,9 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
 
 const authorizeRole = (...roles) => {
   return (req, res, next) => {
+    if (!req.user) {
+      throw new ApiError(401, "Unauthorized access: No user found");
+    }
     if (!roles.includes(req.user.role)) {
       throw new ApiError(
         403,

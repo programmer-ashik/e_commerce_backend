@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import slugify from "slugify";
 import productSchema from "./product/product.schema.js";
 import { ApiError } from "../../utils/ApiError.js";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2"
 
 // ========== VIRTUALS ==========
 productSchema.virtual("discountPercentage").get(function () {
@@ -60,4 +61,5 @@ productSchema.methods.incrementViews = async function () {
   await this.save();
   return true;
 };
+productSchema.plugin(mongooseAggregatePaginate);
 export const Product = mongoose.model("Product", productSchema);

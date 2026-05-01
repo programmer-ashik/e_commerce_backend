@@ -1,4 +1,7 @@
-import { uploadOnCloudinary } from "../config/cloudinary.config";
+import {
+  deleteCloudinary,
+  uploadOnCloudinary,
+} from "../config/cloudinary.config";
 import { addImageToQueue } from "../queues/image.queue";
 import { productRepository } from "../repositories/product.repository";
 import { ApiError } from "../utils/ApiError";
@@ -23,9 +26,6 @@ const createProduct = asyncHandler(async (req, res) => {
   if (!name || !price || !category) {
     throw new ApiError(400, "Name, Price, and Category are required");
   }
-  //   ---image uploading logic--------
-
-  //   -----image uploading complated----------
   // for nested object sefly parseing
   const parseJsonData = (data) => {
     try {
@@ -97,4 +97,90 @@ const createProduct = asyncHandler(async (req, res) => {
       )
     );
 });
-export { createProduct };
+const updateProduct = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const product = await productRepository.findById(productId);
+
+  if (!product) {
+    throw new ApiError(404, "Product not found");
+  }
+  // check vendor update his won products
+  if (product.vendor.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not authorized to update this product");
+  }
+  // ------parse string to object -----
+  const parseJsonData = (data) => {
+    try {
+      return typeof data === "string" ? json.parse(data) : data;
+    } catch (error) {
+      return undefined;
+    }
+  };
+  const updateData = {
+    ...req.body,
+    shipping: parseJsonData(req.body.shipping),
+    seo: parseJsonData(req.body.seo),
+    specifications: parseJsonData(req.body.specifications),
+    variants: parseJsonData(req.body.variants),
+  };
+  if (req.files.mainImage || req.files.gallery?.length > 0) {
+    if (req.files?.mainImage?.[0]) {
+      const oldMainImage = product.images.find((img) => img.isMain === true);
+      if (oldMainImage?.publicId) {
+        await deleteCloudinary(oldMainImage.publicId);
+      }
+    }
+    await addImageToQueue({
+      productId: product._id,
+      operation: "UPDATE",
+      mainImagePath: req.files.mainImage[0].path || null,
+      galleryPaths: req.files.gallery.map((f) => f.path) || [],
+      keepOldGallery: req.body.keepOldGallery === "true",
+    });
+  }
+  const updatedProduct = await productRepository.updateById(
+    productId,
+    updateData
+  );
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updatedProduct,
+        "Product details updated. Images are being processed."
+      )
+    );
+});
+const softDelete = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const product = await productRepository.softDelete(id);
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { name: product.name },
+        "Product deleted (archived) successfully"
+      )
+    );
+});
+const getAllProducts = asyncHandler(async (req, res) => {
+  const products = await productRepository.advancedSearch(req.query);
+  return res
+    .status(200)
+    .json(new ApiResponse(200, products, "Products fetched successfully"));
+});
+const getVendorProducts = asyncHandler(async (req, res) => {
+  const filters = {
+    ...req.query,
+    vendor: req.user?._id,
+    isActive: true,
+    status: req.query.status || "active",
+  };
+  const result = await productRepository.advancedSearch(filters);
+  return res
+    .status(200)
+    .json(new ApiResponse(200, result, "Vendor products fetched successfully"));
+});
+export { createProduct, updateProduct };
