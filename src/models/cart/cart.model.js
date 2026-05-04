@@ -5,19 +5,27 @@ cartSchema.index({ user: 1, isActive: 1 });
 cartSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 //------------Pre-save ---- middleware---------
 cartSchema.pre("save", async function (next) {
-  // calculate total
   this.subTotal = this.items.reduce((sum, item) => sum + (item.total || 0), 0);
-  // apply discount if exists
   if (this.coupon) {
     if (this.coupon.type === "percentage") {
-      this.discount = (this.subTotal * this.coupon.discount) / 100;
+      let calcDiscount =
+        (this.subTotal * (this.coupon.discountValue || 0)) / 100;
+      maxDiscountAmount;
+      if (this.coupon.maxDiscountAmount) {
+        this.discount = Math.min(calcDiscount, this.coupon.maxDiscountAmount);
+      } else {
+        this.discount = calcDiscount;
+      }
     } else {
-      this.discount = this.coupon.discount || 0;
+      // Fixed discount
+      this.discount = Math.min(this.subTotal, this.coupon.discountValue || 0);
     }
   } else {
     this.discount = 0;
+    this.appliedCouponCode = null;
   }
   this.total = Math.max(0, this.subTotal - this.discount);
+
   next();
 });
 // --------instance methods----------
