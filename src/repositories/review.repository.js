@@ -1,4 +1,4 @@
-import { Review } from "../models/Review.models";
+import { Review } from "../models/review.model"
 
 class ReviewRepository {
   async getProductReviews(productId, { page = 1, limit = 10 }) {

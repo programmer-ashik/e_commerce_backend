@@ -1,6 +1,7 @@
 import { populate } from "dotenv";
-import { Category } from "../models/Category.models";
+
 import BaseRepository from "./base.repository";
+import { Category } from "../models/category.model.js";
 
 class CategoryRepository extends BaseRepository {
   constructor() {

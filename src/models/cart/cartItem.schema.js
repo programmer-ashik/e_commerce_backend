@@ -36,7 +36,7 @@ export const cartItemSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    // snapshot----
+    // ------snapshot----
     snapshot: {
       name: String,
       image: String,
