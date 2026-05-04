@@ -8,7 +8,7 @@ cartSchema.pre("save", async function (next) {
   // calculate total
   this.subTotal = this.items.reduce((sum, item) => sum + (item.total || 0), 0);
   // apply discount if exists
-  if (this.coupon && this.coupon.code) {
+  if (this.coupon) {
     if (this.coupon.type === "percentage") {
       this.discount = (this.subTotal * this.coupon.discount) / 100;
     } else {
@@ -77,15 +77,17 @@ cartSchema.methods.clear = async function () {
   return this;
 };
 // ----------apply-coupon--------
-cartSchema.methods.applyCoupon = async function (code, discount, type) {
-  this.coupon = { code, discount, type };
+cartSchema.methods.applyCoupon = async function (couponDoc) {
+  this.coupon = couponDoc._id;
+  this.appliedCouponCode = couponDoc.code;
   return await this.save();
 };
 //----------remove coupon-----------
 cartSchema.methods.removeCoupon = async function () {
   this.coupon = null;
-  this.save();
-  return this;
+  this.appliedCouponCode = null;
+  this.discount = 0;
+  return await this.save();
 };
 
 // ----------------statics methods--------------

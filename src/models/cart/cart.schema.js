@@ -21,13 +21,11 @@ export const cartSchema = new Schema(
     },
     total: { type: Number, default: 0 },
     coupon: {
-      code: String,
-      discount: Number,
-      type: {
-        type: String,
-        enum: ["percentage", "fixed"],
-      },
+      type: Schema.Types.ObjectId,
+      ref: "Coupon",
+      default: null,
     },
+    appliedCouponCode: String,
     isActive: {
       type: Boolean,
       default: true,
