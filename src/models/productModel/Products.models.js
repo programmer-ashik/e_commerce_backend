@@ -11,7 +11,6 @@ productSchema.virtual("discountPercentage").get(function () {
   }
   return 0;
 });
-
 // ========== PRE-SAVE MIDDLEWARE ==========
 productSchema.pre("save", async function (next) {
   // ১. স্লাগ জেনারেট করা
