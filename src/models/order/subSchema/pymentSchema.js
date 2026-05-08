@@ -32,7 +32,7 @@ export const paymentScheme = new Schema({
   paidAt: Date,
   refundedAt: Date,
   refundAmount: Number,
-  details: {
+  paymentDetails: {
     type: Map,
     of: String,
   },

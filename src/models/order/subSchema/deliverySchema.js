@@ -9,7 +9,7 @@ export const deliverySchema = new Schema({
   trackingNumber: String,
   trackingUrl: String,
   estimatedDelivery: Date,
-  deleveryAt: Date,
+  deliveryAt: Date,
   status: {
     type: String,
     enum: [
