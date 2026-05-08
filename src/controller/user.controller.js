@@ -1,9 +1,10 @@
 import {
   deleteCloudinary,
   uploadOnCloudinary,
-} from "../config/cloudinary.config";
-import { userRepository } from "../repositories/user.repository";
-import { asyncHandler } from "../utils/asyncHandler";
+} from "../config/cloudinary.config.js";
+import { ApiError, ApiResponse } from "../utils/apiResponse.js";
+import { userRepository } from "../repositories/user.repository.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
   const avaterLocalPath = req.file?.path;
@@ -66,5 +67,15 @@ const userProfileUpdate = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, { updateUser }, "profile update successfully"));
+});
+const getUserProfile = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const user = await userRepository.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { user }, "User profile fetched successfully"));
 });
 export { updateUserAvatar, userProfileUpdate };

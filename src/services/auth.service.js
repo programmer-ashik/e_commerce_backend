@@ -3,7 +3,10 @@ import { Security } from "../models/userModel/security.model";
 import { userRepository } from "../repositories/user.repository";
 import jwt from "jsonwebtoken";
 import * as mailServer from "../services/email.service.js";
-export const registerUser = async (userDate) => {
+import crypto from "crypto";
+import { ApiError } from "../utils/ApiError.js";
+
+export const registerUser = async (userData) => {
   const { email, fullName, username, password, role } = userData;
   const existedUser = await userRepository.findOne({ email });
   if (existedUser) {
@@ -21,8 +24,12 @@ export const registerUser = async (userDate) => {
   });
   user.security = security._id;
   await user.save();
+  const opt = Math.floor(100000 + Math.random() * 900000).toString();
+  await redisClient.set(`email_verification:${user.email}`, opt, "EX", 300);
+  await mailServer.sendVerificationEmail(user.email, opt);
   return user;
 };
+
 export const loginUser = async (email, password) => {
   const user = await userRepository.findByEmailWithPassword(email);
   if (!user) {
@@ -38,7 +45,7 @@ export const loginUser = async (email, password) => {
     `refresh_token:${user._id}`,
     refreshToken,
     "EX",
-    10 * 24 * 60 * 60
+    process.env.REFRESH_TOKEN_EXPIRY_SECONDS
   );
   return { user, accessToken, refreshToken };
 };
@@ -71,11 +78,11 @@ export const refreshAccessToken = async (incommingRefreshToken) => {
       throw new ApiError(404, "User not found in db ");
     }
     const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    const newRefreshToken = user.generateRefreshToken();
     // put it into the redis
     await redisClient.set(
       `refresh_token:${user._id}`,
-      refreshToken,
+      newRefreshToken,
       "EX",
       10 * 24 * 60 * 60
     );
@@ -134,5 +141,27 @@ export const resetPasswordWithToken = async (token, newPassword) => {
   await redisClient.del(`password_reset:${token}`);
   // for security logout from all devices
   await redisClient.del(`refresh_token:${userId}`);
+  return user;
+};
+export const verifyEmail = async (email, otp) => {
+  //check otp from redis
+  const storedOtp = await redisClient.get(`email_verification:${email}`);
+  if (!storedOtp) {
+    throw new ApiError(400, "OTP expired or invalid");
+  }
+  if (storedOtp !== otp) {
+    throw new ApiError(400, "Incorrect OTP");
+  }
+  // find user and update email verified to true
+  const user = await userRepository.findOne({ email }).populate("security");
+  if (!user || !user.security) {
+    throw new ApiError(404, "User or security profile not found");
+  }
+  const securityProfile = await Security.findById(user.security._id);
+  securityProfile.verification.isEmailVerified = true;
+  securityProfile.verification.emailToken = undefined;
+  securityProfile.verification.emailTokenExpire = undefined;
+  await securityProfile.save();
+  await redisClient.del(`email_verification:${email}`);
   return user;
 };

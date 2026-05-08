@@ -7,9 +7,11 @@ export const sendVerificationEmail = async (email, otp) => {
   sendSmtpEmail.subject = "আপনার ওটিপি (OTP) কোড";
   sendSmtpEmail.htmlContent = `
     <html>
-      <body>
-        <h1>Your verification code: ${otp}</h1>
-        <p>You verification code will expired withen 5 min</p>
+      <body style="font-family: Arial, sans-serif;">
+        <div style="max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd;">
+          <h1>Your verification code: <span style="color: blue;">${otp}</span></h1>
+          <p>Your verification code will expire within 5 minutes.</p>
+        </div>
       </body>
     </html>`;
   sendSmtpEmail.sender = {
@@ -33,13 +35,13 @@ export const sendPasswordResetEmail = async (email, resetUrl) => {
   sendSmtpEmail.htmlContent = `
   <h1>Are you want to reset Password</h1>
   <p>Click to the link given below</p>
-  <a href="${resetUrl}" style="background: blue; color: white; padding: 10px;>
+  <a href="${resetUrl}" style="background: blue; color: white; padding: 10px";>
   Reset password
   </a>
   `;
   sendSmtpEmail.sender = {
     name: "Ashik Shop support",
-    email: "support@admin.com",
+    email: process.env.BREVO_SENDER_EMAIL,
   };
   sendSmtpEmail.to = [{ email: email }];
   return await apiInstance.sendTransacEmail(sendSmtpEmail);

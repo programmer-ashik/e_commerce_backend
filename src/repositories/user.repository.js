@@ -13,5 +13,11 @@ class UserRepository extends BaseRepository {
   async findByEmailWithPassword(email) {
     return await this.model.findOne({ email }).select("+password");
   }
+  async findById(id, populate = "") {
+    return await this.model
+      .findById(id)
+      .select("-password -security -refreshToken")
+      .populate(populate);
+  }
 }
 export const userRepository = new UserRepository();
