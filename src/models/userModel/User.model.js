@@ -65,7 +65,6 @@ const userSchema = new Schema(
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 // ==============indexing for performance============
-userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ "stats.totalOrders": -1 }); //for top coustomer
 // =======vartual field======

@@ -2,9 +2,10 @@ import {
   deleteCloudinary,
   uploadOnCloudinary,
 } from "../config/cloudinary.config.js";
-import { ApiError, ApiResponse } from "../utils/apiResponse.js";
+import { ApiResponse } from "../utils/apiResponse.js";
 import { userRepository } from "../repositories/user.repository.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
   const avaterLocalPath = req.file?.path;
@@ -78,4 +79,4 @@ const getUserProfile = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, { user }, "User profile fetched successfully"));
 });
-export { updateUserAvatar, userProfileUpdate };
+export { updateUserAvatar, userProfileUpdate, getUserProfile };

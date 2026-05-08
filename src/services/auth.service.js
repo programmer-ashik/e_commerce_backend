@@ -1,6 +1,6 @@
-import redisClient from "../config/redis";
-import { Security } from "../models/userModel/security.model";
-import { userRepository } from "../repositories/user.repository";
+import redisClient from "../config/redis.js";
+import { Security } from "../models/userModel/security.model.js";
+import { userRepository } from "../repositories/user.repository.js";
 import jwt from "jsonwebtoken";
 import * as mailServer from "../services/email.service.js";
 import crypto from "crypto";

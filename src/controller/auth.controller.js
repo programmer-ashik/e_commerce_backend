@@ -1,7 +1,8 @@
-import asyncHandler from "../utils/asyncHandler.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import * as authService from "../services/auth.service.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { userRepository } from "../repositories/user.repository.js";
+import { ApiError } from "../utils/ApiError.js";
 export const register = asyncHandler(async (req, res) => {
   const user = await authService.registerUser(req.body);
   const createdUser = user.toObject();
@@ -16,8 +17,27 @@ export const register = asyncHandler(async (req, res) => {
       )
     );
 });
+export const veryfyEmail = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) {
+    throw new ApiError(400, "Email and otp both are required");
+  }
+  const user = await authService.verifyEmail(email, otp);
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        null,
+        "Email verified successfully now you can login"
+      )
+    );
+});
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  if (!email || !password) {
+    throw new ApiError(400, "Email and password both are required");
+  }
   const { user, accessToken, refreshToken } = await authService.loginUser(
     email,
     password

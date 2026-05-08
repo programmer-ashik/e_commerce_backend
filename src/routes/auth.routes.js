@@ -9,16 +9,18 @@ import {
   refreshAccessToken,
   register,
   resetPasswordConfrim,
+  veryfyEmail,
 } from "../controller/auth.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 const router = Router();
 // public route
 router.post("/register", validate(userRegisterSchema), register);
+router.post("/verify-email", veryfyEmail);
 router.post("/login", login);
 router.post("/refresh-token", refreshAccessToken);
 // if forget password
 router.post("/forgot-password", forgotPassword);
-router.post("/reset-password", resetPasswordConfrim);
+router.post("/reset-password/:token", resetPasswordConfrim);
 // protected route
 router.post("/change-password", verifyJWT, changepassword);
 router.post("/logout", verifyJWT, logout);

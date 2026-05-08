@@ -1,7 +1,8 @@
-import redisClient from "../config/redis";
-import { User } from "../models/userModel/User.models";
-import { ApiError } from "../utils/ApiError";
-import { asyncHandler } from "../utils/asyncHandler";
+import redisClient from "../config/redis.js";
+import jwt from "jsonwebtoken";
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { User } from "../models/userModel/User.model.js";
 
 const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
