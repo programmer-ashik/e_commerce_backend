@@ -33,6 +33,16 @@ export const veryfyEmail = asyncHandler(async (req, res) => {
       )
     );
 });
+export const resendOtp = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    throw new ApiError(400, "email or otp required");
+  }
+  await authService.resendOtp(email);
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "A new OTP has been sent to your email."));
+});
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -102,7 +112,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 export const changepassword = asyncHandler(async (req, res) => {
   const userEmail = req.user?.email;
   const { currentPass, newpass } = req.body;
-  await authService.resetPassword(userEmail, currentPass, newpass);
+  await authService.chnagePassword(userEmail, currentPass, newpass);
   return res
     .status(200)
     .json(new ApiResponse(200, {}, "Password changed successfully"));

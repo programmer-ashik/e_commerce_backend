@@ -4,6 +4,7 @@ import { addressSchema } from "./sub-schemas/addresh.schema.js";
 import { preferenceSchema } from "./sub-schemas/preference.schema.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { ApiError } from "../../utils/ApiError.js";
 const userSchema = new Schema(
   {
     username: {
@@ -74,14 +75,12 @@ userSchema.virtual("accountAge").get(function () {
 });
 // ====middleware hooks==
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
+  if (!this.isModified("password")) return;
   try {
     this.password = await bcrypt.hash(this.password, 10);
-    next();
   } catch (error) {
     // we give ApiError
+    throw new ApiError(500, `error from UserModel: ${error}`);
   }
 });
 userSchema.methods.isPasswordCorrect = async function (password) {
@@ -105,7 +104,7 @@ userSchema.methods.generateRefreshToken = function () {
     {
       _id: this._id,
     },
-    REFRESH_TOKEN_SECRET,
+    process.env.REFRESH_TOKEN_SECRET,
     {
       expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
     }

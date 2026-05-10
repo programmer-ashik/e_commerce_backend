@@ -31,7 +31,8 @@ export const registerUser = async (userData) => {
 };
 
 export const loginUser = async (email, password) => {
-  const user = await userRepository.findByEmailWithPassword(email);
+  const user = await userRepository.findUserWithSecurityPassword(email);
+
   if (!user) {
     throw new ApiError(404, "User not found");
   }
@@ -39,14 +40,20 @@ export const loginUser = async (email, password) => {
   if (!isPasswordValid) {
     throw new ApiError(401, "invalid crediantial");
   }
+  if (!user.security?.verification?.isEmailVerified) {
+    throw new ApiError(403, "Please verify your email before logging in.");
+  }
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
   await redisClient.set(
     `refresh_token:${user._id}`,
     refreshToken,
     "EX",
-    process.env.REFRESH_TOKEN_EXPIRY_SECONDS
+    parseInt(process.env.REFRESH_TOKEN_EXPIRY_SECONDS, 10) || 86400
   );
+  // for check redis
+  const savedTokenInRedis = await redisClient.get(`refresh_token:${user._id}`);
+  // console.log("CheckToken:", savedTokenInRedis);
   return { user, accessToken, refreshToken };
 };
 export const logoutUser = async (userId) => {
@@ -91,7 +98,7 @@ export const refreshAccessToken = async (incommingRefreshToken) => {
     throw new ApiError(401, error?.message || "invalid refresh token");
   }
 };
-export const resetPassword = async (userEmail, currentPass, newpass) => {
+export const chnagePassword = async (userEmail, currentPass, newpass) => {
   const user = await userRepository.findByEmailWithPassword(userEmail);
   if (!user) {
     throw new ApiError(404, "User not found");
@@ -121,9 +128,10 @@ export const forgotPassword = async (email) => {
     900
   );
   // create a link for frontend
-  const restUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+  console.log(resetUrl);
   // send email by bravo
-  await mailService.sendPasswordResetEmail(user.email, resetUrl);
+  await mailServer.sendPasswordResetEmail(user.email, resetUrl);
   return true;
 };
 export const resetPasswordWithToken = async (token, newPassword) => {
@@ -153,7 +161,7 @@ export const verifyEmail = async (email, otp) => {
     throw new ApiError(400, "Incorrect OTP");
   }
   // find user and update email verified to true
-  const user = await userRepository.findOne({ email }).populate("security");
+  const user = await userRepository.findUserWithSecurity(email);
   if (!user || !user.security) {
     throw new ApiError(404, "User or security profile not found");
   }
@@ -164,4 +172,30 @@ export const verifyEmail = async (email, otp) => {
   await securityProfile.save();
   await redisClient.del(`email_verification:${email}`);
   return user;
+};
+export const resendOtp = async (email) => {
+  const user = await userRepository.findUserWithSecurity(email);
+  if (!user) {
+    throw new ApiError(404, "User not found with this email");
+  }
+  if (user.security?.verification?.isEmailVerified) {
+    throw new ApiError(400, "This email is already verified. Please login.");
+  }
+  const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  const EXPIRY_IN_MINUTES = 10;
+  const otpExpire = Date.now() + EXPIRY_IN_MINUTES * 60 * 1000;
+  const security = user.security;
+  security.verification.emailToken = newOtp;
+  security.verification.emailTokenExpire = otpExpire;
+  await security.save();
+  // set-otp in redis
+  const EXPIRY_IN_SECONDS = EXPIRY_IN_MINUTES * 60;
+  await redisClient.set(
+    `email_verification:${email}`,
+    newOtp,
+    "EX",
+    EXPIRY_IN_SECONDS
+  );
+  await mailServer.sendVerificationEmail(email, newOtp);
+  return true;
 };

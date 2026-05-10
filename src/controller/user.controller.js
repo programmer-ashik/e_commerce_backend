@@ -79,4 +79,10 @@ const getUserProfile = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, { user }, "User profile fetched successfully"));
 });
+const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await userRepository.findAll();
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { users }, "All users fetched successfully"));
+});
 export { updateUserAvatar, userProfileUpdate, getUserProfile };

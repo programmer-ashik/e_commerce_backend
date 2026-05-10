@@ -3,7 +3,7 @@ import { apiInstance } from "../config/mail.js";
 export const sendVerificationEmail = async (email, otp) => {
   try {
     const data = await apiInstance.transactionalEmails.sendTransacEmail({
-      subject: "আপনার ওটিপি (OTP) কোড",
+      subject: "Your Otp (OTP) Code",
       htmlContent: `
         <html>
           <body style="font-family: Arial, sans-serif;">
@@ -15,12 +15,14 @@ export const sendVerificationEmail = async (email, otp) => {
         </html>`,
       sender: {
         name: "Ashik Shop",
-        email: "no-reply@yourdomain.com", // Must be a verified sender in Brevo
+        email: "ashikhasan998@gmail.com", // Must be a verified sender in Brevo
       },
       to: [{ email: email }],
     });
-
-    console.log("Email sent successfully:", data.body);
+    console.log(otp, data);
+    if (data && data.messageId) {
+      console.log("Email sent successfully with ID:", data.messageId);
+    }
     return data;
   } catch (error) {
     console.error("Brevo Error:", error.response?.body || error.message);
@@ -36,7 +38,8 @@ export const sendPasswordResetEmail = async (email, resetUrl) => {
       <p>Click the link below:</p>
       <a href="${resetUrl}" style="background: blue; color: white; padding: 10px; text-decoration: none;">
         Reset password
-      </a>`,
+      </a>
+      `,
     sender: {
       name: "Ashik Shop Support",
       email: process.env.BREVO_SENDER_EMAIL,

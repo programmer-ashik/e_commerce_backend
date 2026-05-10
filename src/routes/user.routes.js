@@ -13,7 +13,7 @@ const router = Router();
 router.use(verifyJWT);
 
 // Flat structure routes
-router.get("/me", getUserProfile);
+router.get("/profile", getUserProfile);
 router.patch("/update-profile", userProfileUpdate);
 router.patch("/update-avatar", upload.single("avatar"), updateUserAvatar);
 

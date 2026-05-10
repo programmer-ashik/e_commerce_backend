@@ -8,6 +8,7 @@ import {
   logout,
   refreshAccessToken,
   register,
+  resendOtp,
   resetPasswordConfrim,
   veryfyEmail,
 } from "../controller/auth.controller.js";
@@ -16,6 +17,7 @@ const router = Router();
 // public route
 router.post("/register", validate(userRegisterSchema), register);
 router.post("/verify-email", veryfyEmail);
+router.post("/resend-otp", resendOtp);
 router.post("/login", login);
 router.post("/refresh-token", refreshAccessToken);
 // if forget password

@@ -1,5 +1,5 @@
 import BaseRepository from "./base.repository.js";
-import { User } from "../models/userModel/User.model.js"
+import { User } from "../models/userModel/User.model.js";
 
 class UserRepository extends BaseRepository {
   constructor() {
@@ -8,6 +8,10 @@ class UserRepository extends BaseRepository {
   // find by email and security data
   async findUserWithSecurity(email) {
     return await this.model.findOne({ email }).populate("security");
+  }
+  // find by email and security and password data
+  async findUserWithSecurityPassword(email) {
+    return await this.model.findOne({ email }).populate("security password");
   }
   //   user data with password
   async findByEmailWithPassword(email) {

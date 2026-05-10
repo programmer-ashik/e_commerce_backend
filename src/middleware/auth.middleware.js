@@ -24,6 +24,7 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
       throw new ApiError(401, "Session expired, please login again");
     }
     const user = await User.findById(decodeToken._id).select("-password");
+    console.log("find from auth middleware:", user);
     if (!user) {
       throw new ApiError(401, "Invalid AccessToken");
     }
